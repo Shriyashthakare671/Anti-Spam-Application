@@ -1,0 +1,87 @@
+PROJECT TITLE : ANTI SPOOFING AND ANTI SPAM DETECTION
+
+APP NAME : SpamBlocker OR SafeDial.
+
+QUOTES: "In the battle against spam and spoofing, knowledge is your greatest weapon. Equip yourself with our advanced detection system."
+		OR
+"Trust is built on transparency. Our system ensures that every call you receive is verified and secure."
+
+IMPLEMENTATION PLAN :
+
+PHASE 1 : REQUIREMENTS GATHERING.
+	Activities : 
+		*Surveys and Questionnaires: Distribute surveys to a broader audience to collect quantitative data on user experiences with spam calls and their desired features in an application.
+	
+		*Define Scope: Clearly outline the features and functionalities that will be included in the project, as well as any limitations or exclusions.
+	
+PHASE 2 : DESIGN.
+	To create a blueprint for the application, including architecture, user-interface, and database schema.
+	
+	Activities:
+
+    		*Architecture Design: Define the overall architecture of the application, including the interaction between the frontend (React Native) and backend (Node.js), as well as the database (MySQL).
+    
+		*User Interface (UI) Design: This includes designing screens for user registration, call management, spam reporting, and whitelisting.
+	
+		*Database Schema Design: Define the structure of the database, including tables/collections for users, whitelists, spam scores, and call logs. Specify the relationships between different entities.
+	
+		*API Design: Outline the RESTful API endpoints that will be used for communication between the frontend and backend, including request/response formats.
+	
+PHASE 3 : DEVELOPMENT
+	
+	Activities : Backend Development.
+		*Set up a Node.js server using Express.
+		*Implement user registration and authentication, including TOTP generation OR Fingerprint  and verification.
+		*Create API endpoints for functionalities such as reporting spam, whitelisting numbers, and retrieving user data.
+		Implement the spam scoring algorithm based on whitelisting and spam reports.
+		: Frontend Development.
+		*Develop the React Native application, creating components for user registration, call management, and spam reporting.
+		*Integrate TOTP scanning and input functionality using libraries like react-native-qrcode-scanner.
+		*ensure Application is Responsive and User-frindly
+		
+		
+PHASE 4 : TESTING
+	 To ensure that the application is functional, secure, and user-friendly.
+	 
+	Activities : 
+		*Integration Testing: Test the interaction between different components of the application, such as the frontend and backend, to ensure they communicate correctly.
+		
+		*User Acceptance Testing (UAT): Involve real users in testing the application to gather feedback on usability and functionality. Make adjustments based on their input.
+
+PHASE 5 : DEPLOYMENT
+	
+	Activities : 
+		*Backend Deployment:  Deploy the Node.js server on a cloud service (e.g., AWS, Heroku, DigitalOcean) and ensure it is properly configured for production.
+		*Frontend Deployment: Publish the React Native application on app stores (Google Play Store and Apple App Store) after thorough testing and compliance with their guidelines.
+		*Database Deploymant: Set up the database in a cloud environment, ensuring it is secure and accessible by the backend.
+		*Monitoring Setup: Implement monitoring tools to track application performance, user engagement, and error reporting, Logging.
+		
+PHASE 6 : MAINTENANCE.
+	
+	Activities : 
+		
+		*User Support: Provide support channels for users to report issues, ask questions, and provide feedback.
+		*Regular Updates: Release updates to fix bugs, improve performance, and add new features based on user feedback and changing requirements.
+		*Performance Monitoring: Continuously monitor application performance and user engagement metrics to identify areas for improvement.
+		
+		
+		
+		
+								Wednesday 25 December 2024 09:08:30 PM
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
