@@ -68,25 +68,18 @@ const LoginScreen = ({ navigation }) => {
         }
     
         try {
-            const totpResponse = await axios.post(`${BASE_URL}/api/users/login`, { phone: phone });
-            
-            if (totpResponse.data.totpToken) {
-                console.log('✅ Received TOTP Token:', totpResponse.data.totpToken);
-                const verifyResponse = await axios.post(`${BASE_URL}/api/users/verify`, {
-                    phone: phone,
-                    totp: totpResponse.data.totpToken
-                });
+            const response = await axios.post(`${BASE_URL}/api/users/login`, { phone, totp });
     
-                if (verifyResponse.data.verified) {
-                    console.log('✅ Login Successful:', phone);
-                    navigation.navigate('Home'); // ✅ Navigate to Home on success
-                } else {
-                    Alert.alert('Error', 'Invalid TOTP');
-                }
+            if (response.data.verified) {
+                console.log('✅ Login Successful:', phone);
+                setIsLoggedIn(true);
+                navigation.navigate('Home'); // ✅ Navigate to Home on success
+            } else if (response.data.requiresTotp) {
+                Alert.alert('TOTP Required', 'Click "Get Code" to generate a new token.');
             } else {
-                Alert.alert('Error', 'Failed to get TOTP Token');
+                Alert.alert('Error', 'Invalid TOTP');
             }
-        } catch (error) {
+        }catch (error) {
             console.error('❌ Login Error:', error?.response?.data || error.message);
             Alert.alert('Error', error?.response?.data?.error || 'Server Error, Try again later.');
         }

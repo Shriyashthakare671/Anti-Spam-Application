@@ -34,7 +34,7 @@ function HomeStack() {
 
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [300, -300],
+    outputRange: [200, -200],
   });
 
   return (
@@ -43,7 +43,7 @@ function HomeStack() {
         name="Home" 
         component={HomeScreen} 
         options={{
-          headerStyle: { backgroundColor: 'transparent' },
+          headerStyle: { backgroundColor: '#007AFF' },
           headerTintColor: '#fff',
           headerTitle: () => (
             <View style={styles.headerContainer}>
@@ -61,24 +61,17 @@ function HomeStack() {
     </Stack.Navigator>
   );
 }
-// PushNotification.createChannel(
-//   {
-//       channelId: 'totp-channel', // Unique ID
-//       channelName: 'TOTP Notifications',
-//       importance: 4, // High importance
-//       vibrate: true,
-//   },
-//   (created) => console.log(`Notification Channel Created: ${created}`)
-// );
-
-function AuthStack() {
+function AuthStack({setIsLoggedIn}) {
   return (
     <Stack.Navigator initialRouteName="LoginScreen">
-      <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen name="LoginScreen">
+        {props => <LoginScreen {...props} setIsLoggedIn={setIsLoggedIn} />}
+      </Stack.Screen>
       <Stack.Screen name="Signup" component={SignupScreen} />
     </Stack.Navigator>
   );
 }
+
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Default: not logged in
@@ -87,12 +80,12 @@ const App = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
         {isLoggedIn ? (
-          <Drawer.Navigator initialRouteName="Home">
-            <Drawer.Screen name="Home" component={HomeStack} />
+          <Drawer.Navigator initialRouteName="Main">
+            <Drawer.Screen name="Main" component={HomeStack} />
             <Drawer.Screen name="Settings" component={SettingsScreen} />
           </Drawer.Navigator>
         ) : (
-          <AuthStack />
+          <AuthStack setIsLoggedIn={setIsLoggedIn} />
         )}
       </NavigationContainer>
     </GestureHandlerRootView>
@@ -101,14 +94,16 @@ const App = () => {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
   },
   headerText: {
-    color: '#ff0000',
+    fontSize: 16,
     fontWeight: 'bold',
-    fontSize: 14,
+    color: '#fff',
+    textAlign: 'center',
   },
 });
 

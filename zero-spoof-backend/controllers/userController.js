@@ -74,13 +74,13 @@ exports.loginUser = async (req, res) => {
     try {
         console.log('📥 Login Request:', req.body);
 
-        const { phone } = req.body;
+        const { phone, totp } = req.body;
         if (!phone) {
             console.error('❌ Missing Phone Number');
             return res.status(400).json({ error: 'Phone Number is required' });
         }
 
-        // ✅ Get User by Phone
+        // ✅ Fetch User by Phone
         getUserByPhone(phone, (err, user) => {
             if (err) {
                 console.error('❌ Database Query Error:', err);
@@ -94,19 +94,20 @@ exports.loginUser = async (req, res) => {
 
             const userSecret = user[0].secret; // ✅ Get stored TOTP secret
 
-            //✅ If user exists but has no TOTP token, ask them to generate a new one
-            // if (!totp) {
-            //     return res.json({
-            //         message: 'TOTP Token required. Click "Get Code" to generate a new token.'
-            //     });
-            // }
+            // ✅ If TOTP token is missing, ask user to generate a new one
+            if (!totp) {
+                return res.json({
+                    message: 'TOTP Token required. Click "Get Code" to generate a new token.',
+                    requiresTotp: true
+                });
+            }
 
             // ✅ Verify TOTP Token
             const isValid = speakeasy.totp.verify({
                 secret: userSecret,
                 encoding: 'base32',
-                token: totpToken,
-                window: 2, // ✅ Allows slight time drift (adjust if needed)
+                token: totp,
+                window: 2, // ✅ Allows slight time drift
             });
 
             if (isValid) {
