@@ -1,80 +1,101 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet, ActivityIndicator, Text, Image } from 'react-native';
+import PushNotification from 'react-native-push-notification'; 
+import { View, TextInput,button, Alert, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import axios from 'axios';
-import { responsiveFontSize, responsiveHeight, responsiveWidth } from '../utils/responsive';
+import QRCode from 'react-native-qrcode-svg';
+import { responsiveHeight, responsiveWidth, responsiveFontSize } from '../utils/responsive';
+import LoginScreen from './LoginScreen';
 
 const SignupScreen = ({ navigation }) => {
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [username, setUsername] = useState(''); // Added state for username
-    const [token, setToken] = useState(''); // Added state for token
-    const [loading, setLoading] = useState(false);
+    const [username, setUsername] = useState('');
+    const [phone, setphone] = useState('');
+    const [qrData, setQrData] = useState('');
+    const [isRegistered, setIsRegistered] = useState(false);
 
     const handleSignup = async () => {
-        if (!username || !phoneNumber || !token) {
-            Alert.alert('Error', 'All fields are required');
+        if (!username || !phone) {
+            Alert.alert('Error', 'Username and Phone Number are required');
             return;
         }
 
-        // Basic phone number validation (e.g., length check)
-        if (phoneNumber.length < 10) {
-            Alert.alert('Error', 'Please enter a valid phone number');
-            return;
-        }
-
-        setLoading(true);
         try {
-            const response = await axios.post('http://your-backend-url/auth/generate', {
+            const response = await axios.post('http://192.168.1.108:3000/api/users/register', {
                 username,
-                phoneNumber,
-                token, // Send the token with the signup request
+                phone
             });
-            if (response.data.secret) {
-                Alert.alert('Success', `Your secret is: ${response.data.secret}`);
-                navigation.navigate('Login'); // Navigate to Login after successful signup
+
+            console.log('API Response:', response.data);
+
+            if (response.data.secret && response.data.totpToken) {
+                Alert.alert('Success', `Registration Successful!\nYour TOTP Token: ${response.data.totpToken}`);
+
+
+                // ✅ Store QR Code & Secret (Limit QR Data)
+                setQrData(response.data.qrCode?.substring(0, 500)); // Ensures QR data is not too big
+                setIsRegistered(true);
+
+                // // ✅ Send Push Notification with TOTP Token
+                // PushNotification.localNotification({
+                //     channelId: 'totp-channel',
+                //     title: 'Your TOTP Code',
+                //     message: TOTP: ${response.data.totpToken},  // ✅ Corrected message to show actual TOTP token
+                //     playSound: true,
+                //     soundName: 'default',
+                //     timeoutAfter: 60000, // Notification disappears after 1 min
+                // });
+
+                // ✅ Delay Navigation to Login Screen for 1 Minute
+                setTimeout(() => {
+                    navigation.navigate('LoginScreen'); // ✅ Use replace to prevent going back
+                }, 60000); // 60000ms = 1 minute
             } else {
-                Alert.alert('Error', 'Something went wrong');
+                Alert.alert('Error', response.data.message || 'Registration Failed');
             }
         } catch (error) {
-            Alert.alert('Error', error.response?.data?.message || 'Signup failed');
-        } finally {
-            setLoading(false);
+            console.error('Registration Error:', error?.response?.data || error.message);
+            Alert.alert('Error', error?.response?.data?.message || 'Server Error, Try again later.');
         }
     };
 
     return (
         <View style={styles.container}>
-            <View style={styles.logoContainer}>
-                <Image
-                    source={require('../assets/logo.png')} // Ensure this path is correct
-                    style={styles.logo}
-                    resizeMode="contain" // Ensure the logo maintains its aspect ratio
-                />
-            </View>
-            <TextInput
-                style={styles.input}
-                placeholder="Username"
-                value={username}
-                onChangeText={setUsername}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Phone Number"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="TOTP Token"
-                value={token}
-                onChangeText={setToken}
-                secureTextEntry
-            />
-            <Button title="Signup" onPress={handleSignup} disabled={loading} />
-            {loading && <ActivityIndicator size="small" color="#0000ff" style={styles.loader} />}
-            <View style={styles.navigationContainer}>
-                <Button title="Go to Login" onPress={() => navigation.navigate('Login')} disabled={loading} />
-            </View>
+            {!isRegistered ? (
+                <>
+                    <View style={{ alignItems: 'center' }}>
+                        <Image source={require('../assets/logo.png')} style={styles.logo} />
+                    </View>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Username"
+                        value={username}
+                        onChangeText={setUsername}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Phone Number"
+                        value={phone}
+                        onChangeText={setphone}
+                        keyboardType="phone-pad"
+                    />
+                    {/* <Button title="Signup" onPress={handleSignup} /> */}
+                    <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
+                        <Text style={styles.buttonText}>Signup</Text>
+                    </TouchableOpacity>
+
+
+
+                </>
+            ) : (
+                <View style={styles.qrContainer}>
+                    <Text style={styles.text}>Scan this QR Code to complete registration:</Text>
+                    <View style={styles.qrWrapper}>
+                        <QRCode value={qrData} size={responsiveWidth(10)} />
+                    </View>
+                    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('LoginScreen')}>
+                        <Text style={styles.buttonText}>Proceed to Login</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </View>
     );
 };
@@ -83,33 +104,77 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
         padding: responsiveWidth(6),
     },
-    logoContainer: {
-        alignItems: 'center',
-        marginBottom: responsiveHeight(4), // Space between logo and inputs
-        backgroundColor: 'transparent', // Ensure the container background is transparent
-    },
-    logo: {
-        width: responsiveWidth(40), // Adjust logo width
-        height: responsiveHeight(20), // Adjust logo height
-        backgroundColor: 'transparent', // Ensure the image itself has no background
-    },
     input: {
-        height: responsiveHeight(6), // Adjust input height for better spacing
+        width: '70%',
+        height: responsiveHeight(5),
         borderColor: 'gray',
         borderWidth: 1,
         marginBottom: responsiveHeight(2),
         paddingHorizontal: responsiveWidth(3),
-        fontSize: responsiveFontSize(10), // Adjust font size for better readability
-        borderRadius: 8,
+        fontSize: responsiveFontSize(10),
+        borderRadius: 10,
     },
-    loader: {
-        marginVertical: responsiveHeight(2), // Adds space above the loader
+    qrContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F8F9FA', // ✅ Light background for contrast
+        paddingHorizontal: responsiveWidth(2),
     },
-    navigationContainer: {
-        marginTop: responsiveHeight(2),
+    text: {
+        fontSize: responsiveFontSize(2.5),
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'center',
+        marginBottom: responsiveHeight(1),
     },
+    qrWrapper: {
+        backgroundColor: 'white', // ✅ Adds contrast
+        padding: responsiveWidth(4),
+        borderRadius: 10,
+        elevation: 5, // ✅ Adds shadow for Android
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        marginBottom: responsiveHeight(4),
+    },
+    signupButton: {
+        width: '60%',
+        backgroundColor: '#4CAF50',  // ✅ Elegant green color for signup
+        paddingVertical: responsiveHeight(1),
+        borderRadius: 10,
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginVertical: responsiveHeight(1),
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 5,  // ✅ Adds shadow for Android
+    },
+    button: {
+        width: '80%',
+        backgroundColor: '#007AFF',  // ✅ Attractive blue
+        paddingVertical: responsiveHeight(2),
+        borderRadius: 10,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 10,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',  // ✅ Makes text look premium
+        letterSpacing: 1.2,  // ✅ Spacing for a clean look
+    }
 });
 
 export default SignupScreen;

@@ -1,6 +1,7 @@
 const ami = require('../config/asterisk'); // ✅ Ensure correct path
 const speakeasy = require('speakeasy');
 const { getUserByPhone } = require('../models/userModel');
+const cors = require('cors');
 
 exports.initiateCall = (req, res) => {
     const { phone } = req.body;

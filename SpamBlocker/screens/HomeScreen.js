@@ -14,6 +14,7 @@ const HomeScreen = ({ navigation }) => {
     }, [fadeAnim]);
 
     const handleLogout = () => {
+        // <Button title="Logout" onPress={() => navigation.navigate('Login')} />
         // navigation.navigate('Login'); // Navigate to Login screen
     };
 

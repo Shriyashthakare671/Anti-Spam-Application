@@ -13,6 +13,8 @@ import SpamDetectionScreen from './screens/SpamDetectionScreen';
 import WhitelistSettingScreen from './screens/WhitelistSettingScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
+import PushNotification from 'react-native-push-notification';
+
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -59,18 +61,27 @@ function HomeStack() {
     </Stack.Navigator>
   );
 }
+// PushNotification.createChannel(
+//   {
+//       channelId: 'totp-channel', // Unique ID
+//       channelName: 'TOTP Notifications',
+//       importance: 4, // High importance
+//       vibrate: true,
+//   },
+//   (created) => console.log(`Notification Channel Created: ${created}`)
+// );
 
 function AuthStack() {
   return (
-    <Stack.Navigator initialRouteName="Login">
-      <Stack.Screen name="Login" component={LoginScreen} />
+    <Stack.Navigator initialRouteName="LoginScreen">
+      <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="Signup" component={SignupScreen} />
     </Stack.Navigator>
   );
 }
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Default: not logged in
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Default: not logged in
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

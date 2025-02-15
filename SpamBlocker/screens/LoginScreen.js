@@ -1,63 +1,145 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
-import { responsiveFontSize, responsiveHeight, responsiveWidth } from '../utils/responsive';
+import {
+    View,
+    TextInput,
+    TouchableOpacity,
+    Text,
+    Image,
+    StyleSheet,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView
+} from 'react-native';
 import axios from 'axios';
-import HomeScreen from './HomeScreen';
+import { responsiveWidth, responsiveHeight, responsiveFontSize } from '../utils/responsive';
+
+
+const BASE_URL = 'http://192.168.1.108:3000'; // ✅ Replace with your actual backend URL
 
 const LoginScreen = ({ navigation }) => {
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [token, setToken] = useState('');
+    const [phone, setPhone] = useState('');
+    const [totp, setTotp] = useState('');
+    const [showGetCode, setShowGetCode] = useState(false);
+    const [isCodeSent, setIsCodeSent] = useState(false);
 
-    // Hardcoded login data
-    // const hardcodedPhoneNumber = '1234567890';
-    // const hardcodedToken = '123456'; // Example token
+    // ✅ Check if user exists before allowing login
+    const checkUserExists = async () => {
+        if (!phone) {  // ✅ Use correct state variable
+            Alert.alert('Error', 'Please enter your phone number');
+            return;
+        }
+        try {
+            console.log('📤 Checking User:', phone); // ✅ Debugging log
+            const response = await axios.post(`${BASE_URL}/api/users/check`, { phone: phone });
+    
+            console.log('✅ API Response:', response.data); // ✅ Debugging log
+    
+            if (response.data.exists) {
+                setShowGetCode(true);  // ✅ Show "Get Code" Button
+            } else {
+                Alert.alert('User Not Found', 'No account found with this phone number.');
+            }
+        } catch (error) {
+            console.error('❌ API Error:', error?.response?.data || error.message);
+            Alert.alert('Error', 'Server error, try again later.');
+        }
+    };
+    
 
-    const handleLogin = async () => {
-        // Check hardcoded credentials
-        // if (phoneNumber === hardcodedPhoneNumber && token === hardcodedToken) {
-        //     navigation.navigate('Home'); // Navigate to Home on successful login
-        // } else {
-        //     Alert.alert('Error', 'Invalid login credentials');
-        // }
+    // ✅ Get a new TOTP token for existing users
+    const getNewTOTP = async () => {
+        try {
+            const response = await axios.post(`${BASE_URL}/api/users/generate-totp`, { phone });
+            if (response.data.totpToken) {
+                Alert.alert('New TOTP Code', `Your new TOTP: ${response.data.totpToken}`);
+                setIsCodeSent(true);
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to generate a new TOTP token');
+        }
     };
 
+    // ✅ Handle Login
+    const handleLogin = async () => {
+        if (!phone || !totp) {
+            Alert.alert('Error', 'Phone Number and TOTP are required');
+            return;
+        }
+    
+        try {
+            const totpResponse = await axios.post(`${BASE_URL}/api/users/login`, { phone: phone });
+            
+            if (totpResponse.data.totpToken) {
+                console.log('✅ Received TOTP Token:', totpResponse.data.totpToken);
+                const verifyResponse = await axios.post(`${BASE_URL}/api/users/verify`, {
+                    phone: phone,
+                    totp: totpResponse.data.totpToken
+                });
+    
+                if (verifyResponse.data.verified) {
+                    console.log('✅ Login Successful:', phone);
+                    navigation.navigate('Home'); // ✅ Navigate to Home on success
+                } else {
+                    Alert.alert('Error', 'Invalid TOTP');
+                }
+            } else {
+                Alert.alert('Error', 'Failed to get TOTP Token');
+            }
+        } catch (error) {
+            console.error('❌ Login Error:', error?.response?.data || error.message);
+            Alert.alert('Error', error?.response?.data?.error || 'Server Error, Try again later.');
+        }
+    };
+    
+
     return (
-        <View style={styles.container}>
-            {/* Logo */}
-            <View style={styles.logoContainer}>
-                <Image
-                    source={require('../assets/logo.png')} // Ensure this path is correct
-                    style={styles.logo}
-                    resizeMode="contain" // Ensure the logo maintains its aspect ratio
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FA' }}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+                <Image source={require('../assets/logo.png')} style={styles.logo} />
+
+                <TextInput
+                    style={styles.input}
+                    placeholder="Phone Number"
+                    value={phone}
+                    onChangeText={setPhone}
+                    keyboardType="phone-pad"
                 />
-            </View>
 
-            {/* Input Fields */}
-            <TextInput
-                style={styles.input}
-                placeholder="Phone Number"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="TOTP Token"
-                value={token}
-                onChangeText={setToken}
-                secureTextEntry
-            />
+                {!showGetCode ? (
+                    <TouchableOpacity style={styles.button} onPress={checkUserExists}>
+                        <Text style={styles.buttonText}>Check User</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <>
+                        {!isCodeSent ? (
+                            <TouchableOpacity style={styles.button} onPress={getNewTOTP}>
+                                <Text style={styles.buttonText}>Get Code</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Enter TOTP"
+                                    value={totp}
+                                    onChangeText={setTotp}
+                                    keyboardType="numeric"
+                                />
 
-            {/* Login Button */}
-            <View style={styles.buttonContainer}>
-                <Button title="Login" onPress={handleLogin} />
-            </View>
+                                <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                                    <Text style={styles.buttonText}>Login</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </>
+                )}
 
-            {/* Signup Link */}
-            <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                <Text style={styles.signupText}>Go to Signup</Text>
-            </TouchableOpacity>
-        </View>
+                <Text style={styles.signupText}>Don't have an account?</Text>
+                <TouchableOpacity style={[styles.button, styles.signupButton]} onPress={() => navigation.navigate('Signup')}>
+                    <Text style={styles.buttonText}>Sign up</Text>
+                </TouchableOpacity>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 };
 
@@ -65,36 +147,54 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
-        padding: responsiveWidth(6),
-    },
-    logoContainer: {
         alignItems: 'center',
-        marginBottom: responsiveHeight(4), // Space between logo and inputs
-        backgroundColor: 'transparent', // Ensure the container background is transparent
+        paddingHorizontal: responsiveWidth(5),
+        paddingTop: responsiveHeight(5),
+        paddingBottom: responsiveHeight(25),
     },
     logo: {
-        width: responsiveWidth(40), // Adjust logo width
-        height: responsiveHeight(20), // Adjust logo height
-        backgroundColor: 'transparent', // Ensure the image itself has no background
+        width: responsiveWidth(30),
+        height: responsiveHeight(15),
+        resizeMode: 'contain',
+        alignSelf: 'center',
+        marginTop: responsiveHeight(15),
+        marginBottom: responsiveHeight(3),
     },
     input: {
+        width: '65%',
         height: responsiveHeight(6),
+        alignSelf: 'center',
         borderColor: 'gray',
         borderWidth: 1,
         marginBottom: responsiveHeight(2),
-        paddingHorizontal: responsiveWidth(3),
-        fontSize: responsiveFontSize(10),
+        paddingHorizontal: responsiveWidth(4),
+        fontSize: responsiveFontSize(10), // ✅ Fixed font size
         borderRadius: 10,
+        backgroundColor: 'white',
     },
-    buttonContainer: {
-        marginVertical: responsiveHeight(2),
+    button: {
+        width: '60%',
+        backgroundColor: '#007AFF',
+        paddingVertical: responsiveHeight(1),
+        borderRadius: 10,
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginVertical: responsiveHeight(1),
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
     },
-    signupText: {
-        textAlign: 'center',
-        marginTop: responsiveHeight(3),
-        fontSize: responsiveFontSize(10),
-        color: '#007BFF',
+    signupButton: {
+        backgroundColor: '#4CAF50',
+        fontWeight: 'bold',
     },
+    buttonText: {
+        color: 'white',
+        fontSize: 10,
+        fontWeight: 'bold',
+    }
 });
 
 export default LoginScreen;
