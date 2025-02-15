@@ -61,31 +61,38 @@ function HomeStack() {
     </Stack.Navigator>
   );
 }
-function AuthStack({setIsLoggedIn}) {
+function AuthStack({ setIsLoggedIn }) {
   return (
-    <Stack.Navigator initialRouteName="LoginScreen">
-      <Stack.Screen name="LoginScreen">
+    <Stack.Navigator initialRouteName="Login">
+      <Stack.Screen 
+        name="Login"
+        options={{ headerShown: false }}
+      >
         {props => <LoginScreen {...props} setIsLoggedIn={setIsLoggedIn} />}
       </Stack.Screen>
-      <Stack.Screen name="Signup" component={SignupScreen} />
+      <Stack.Screen 
+        name="Signup" 
+        component={SignupScreen} 
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
 
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Default: not logged in
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // ✅ Login state
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
         {isLoggedIn ? (
-          <Drawer.Navigator initialRouteName="Main">
-            <Drawer.Screen name="Main" component={HomeStack} />
+          <Drawer.Navigator initialRouteName="Home">
+            <Drawer.Screen name="Home" component={HomeStack} />
             <Drawer.Screen name="Settings" component={SettingsScreen} />
           </Drawer.Navigator>
         ) : (
-          <AuthStack setIsLoggedIn={setIsLoggedIn} />
+          <AuthStack setIsLoggedIn={setIsLoggedIn} />  // ✅ Passing `setIsLoggedIn`
         )}
       </NavigationContainer>
     </GestureHandlerRootView>

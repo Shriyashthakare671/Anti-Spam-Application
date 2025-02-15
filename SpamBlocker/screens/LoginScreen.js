@@ -73,7 +73,7 @@ const LoginScreen = ({ navigation }) => {
             if (response.data.verified) {
                 console.log('✅ Login Successful:', phone);
                 setIsLoggedIn(true);
-                navigation.navigate('Home'); // ✅ Navigate to Home on success
+                navigation.replace('Home'); // ✅ Navigate to Home on success
             } else if (response.data.requiresTotp) {
                 Alert.alert('TOTP Required', 'Click "Get Code" to generate a new token.');
             } else {
