@@ -7,6 +7,7 @@ exports.registerUser = async (req, res) => {
         console.log('📥 Received Request:', req.body);
 
         const { username, phone } = req.body;
+        
         if (!username || !phone) {
             console.error('❌ Missing Fields:', { username, phone });
             return res.status(400).json({ error: 'Username and Phone are required' });
@@ -141,14 +142,13 @@ exports.checkUserExists = (req, res) => {
             console.error('❌ Database Query Error:', err);
             return res.status(500).json({ error: 'Database error' });
         }
-
-        if (!user || user.length === 0) {
-            console.log('❌ User Not Found:', phone);
+        if (user.length > 0) {
+            console.log('✅ User Found:', phone);
+            return res.json({ exists: true });
+        } else {
+            console.log('❌ No account found with this phone number:', phone);
             return res.status(404).json({ error: 'No account found with this phone number' });
         }
-
-        console.log('✅ User Found:', user);
-        return res.json({ exists: true });
     });
 };
 

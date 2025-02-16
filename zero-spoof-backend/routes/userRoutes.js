@@ -10,12 +10,15 @@ const catchAsync = (fn) => (req, res, next) => {
 // ✅ Validate User Input (Basic Validation)
 const validateUserInput = (req, res, next) => {
     const { phone } = req.body;
-    
-    if (!phone || !/^\d{10}$/.test(phone)) {  // Ensures phone is a 10-digit number
-        return res.status(400).json({ error: 'Invalid phone number format' });
+
+    // ✅ Indian mobile number pattern (Starts with +91 or 10-digit number starting from 6-9)
+    const indianPhoneRegex = /^(?:\+91)?[789]\d{9}$/;
+    if (!phone || !indianPhoneRegex.test(phone)) {
+        return res.status(400).json({ error: 'Invalid Indian phone number format. Use +91XXXXXXXXXX' });
     }
     next();
 };
+
 
 // ✅ Register User Route
 router.post('/register', validateUserInput, catchAsync(registerUser));

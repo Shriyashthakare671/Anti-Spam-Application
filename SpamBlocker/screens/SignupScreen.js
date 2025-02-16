@@ -5,12 +5,15 @@ import axios from 'axios';
 import QRCode from 'react-native-qrcode-svg';
 import { responsiveHeight, responsiveWidth, responsiveFontSize } from '../utils/responsive';
 import LoginScreen from './LoginScreen';
+import { NavigationContainer } from '@react-navigation/native';
 
 const SignupScreen = ({ navigation }) => {
     const [username, setUsername] = useState('');
     const [phone, setphone] = useState('');
     const [qrData, setQrData] = useState('');
+    const [totpToken, setTotpToken] = useState('');
     const [isRegistered, setIsRegistered] = useState(false);
+
 
     const handleSignup = async () => {
         if (!username || !phone) {
@@ -27,12 +30,19 @@ const SignupScreen = ({ navigation }) => {
             console.log('API Response:', response.data);
 
             if (response.data.secret && response.data.totpToken) {
-                Alert.alert('Success', `Registration Successful!\nYour TOTP Token: ${response.data.totpToken}`);
+                // Alert.alert('Success', `Registration Successful!\nYour TOTP Token: ${response.data.totpToken}`);
 
 
-                // ✅ Store QR Code & Secret (Limit QR Data)
-                setQrData(response.data.qrCode?.substring(0, 500)); // Ensures QR data is not too big
+                setQrData(response.data.qrCode?.substring(0, 500));
+                setTotpToken(response.data.totpToken);
                 setIsRegistered(true);
+
+                Alert.alert(
+                    'Success',
+                    'Signup Successful!\nYour TOTP Token Auto Fetch BY QR Code.',
+                );
+
+                // Alert.alert('Success', `Signup Successful! Your TOTP Token: ${response.data.totpToken}`);
 
                 // // ✅ Send Push Notification with TOTP Token
                 // PushNotification.localNotification({
@@ -44,10 +54,10 @@ const SignupScreen = ({ navigation }) => {
                 //     timeoutAfter: 60000, // Notification disappears after 1 min
                 // });
 
-                // ✅ Delay Navigation to Login Screen for 1 Minute
+
                 setTimeout(() => {
-                    navigation.navigate('LoginScreen'); // ✅ Use replace to prevent going back
-                }, 60000); // 60000ms = 1 minute
+                    navigation.navigate('Login'); 
+                }, 5000); 
             } else {
                 Alert.alert('Error', response.data.message || 'Registration Failed');
             }
@@ -81,17 +91,15 @@ const SignupScreen = ({ navigation }) => {
                     <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
                         <Text style={styles.buttonText}>Signup</Text>
                     </TouchableOpacity>
-
-
-
                 </>
             ) : (
                 <View style={styles.qrContainer}>
-                    <Text style={styles.text}>Scan this QR Code to complete registration:</Text>
+                    <Text style={styles.text}>Your TOTP Token (Auto-Fetched via QR Code):</Text>
                     <View style={styles.qrWrapper}>
-                        <QRCode value={qrData} size={responsiveWidth(10)} />
+                        <QRCode value={qrData} size={200} />
                     </View>
-                    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('LoginScreen')}>
+                    {/* <Text style={styles.totpText}>TOTP Token: {totpToken}</Text> */}
+                    <TouchableOpacity style={styles.button} onPress={() => navigation.replace('LoginScreen')}>
                         <Text style={styles.buttonText}>Proceed to Login</Text>
                     </TouchableOpacity>
                 </View>
@@ -107,6 +115,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: responsiveWidth(6),
     },
+    logo: {
+        width: responsiveWidth(30),
+        height: responsiveHeight(15),
+        resizeMode: 'contain',
+        alignSelf: 'center',
+        marginBottom: responsiveHeight(3),
+    },
     input: {
         width: '70%',
         height: responsiveHeight(5),
@@ -121,15 +136,21 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F8F9FA', // ✅ Light background for contrast
+        backgroundColor: '#F8F9FA', 
         paddingHorizontal: responsiveWidth(2),
     },
     text: {
-        fontSize: responsiveFontSize(2.5),
+        fontSize: responsiveFontSize(8),
         fontWeight: 'bold',
         color: '#333',
         textAlign: 'center',
-        marginBottom: responsiveHeight(1),
+        marginBottom: 10,
+    },
+    totpText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#007AFF',
+        marginVertical: 10,
     },
     qrWrapper: {
         backgroundColor: 'white', // ✅ Adds contrast
@@ -140,7 +161,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 2, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 5,
-        marginBottom: responsiveHeight(4),
+        marginBottom: responsiveHeight(2),
     },
     signupButton: {
         width: '60%',

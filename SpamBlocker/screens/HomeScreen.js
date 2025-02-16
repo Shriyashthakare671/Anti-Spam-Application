@@ -13,11 +13,6 @@ const HomeScreen = ({ navigation }) => {
         }).start();
     }, [fadeAnim]);
 
-    const handleLogout = () => {
-        // <Button title="Logout" onPress={() => navigation.navigate('Login')} />
-        // navigation.navigate('Login'); // Navigate to Login screen
-    };
-
     // Data for the FlatList
     const cardsData = [
         {
@@ -65,14 +60,6 @@ const HomeScreen = ({ navigation }) => {
 
     return (
         <View style={styles.mainContainer}>
-            {/* Logout Button */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Image
-                    source={require('../assets/logout.png')} // Update with the correct path
-                    style={styles.logoutLogo}
-                    resizeMode="contain"
-                />
-            </TouchableOpacity>
 
             {/* Animated Title */}
             <Animated.Text style={[styles.titleText, { opacity: fadeAnim }]}>
