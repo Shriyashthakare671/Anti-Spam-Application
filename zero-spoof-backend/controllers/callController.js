@@ -39,11 +39,11 @@ exports.initiateCall = (req, res) => {
 
             ami.action({
                 Action: 'Originate',
-                Channel: `SIP/${sipProvider}/${phone}`,
+                Channel: `SIP/sip.provider.com/${phone}`,
                 Context: 'default',
                 Exten: phone,
                 Priority: 1,
-                CallerID: 'ZeroSpoof',
+                CallerID: '7887 <7887710549>',
                 Application: 'Playback',
                 Data: `dtmf/${token}`
             }, async (err, response) => {

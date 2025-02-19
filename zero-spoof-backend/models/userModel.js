@@ -14,7 +14,7 @@ const userModel = {
     },
 
     getUserByPhone: (phone, callback) => {
-        const query = 'SELECT * FROM users WHERE phone = ?'; // ✅ Use phone (correct column name)
+        const query = 'SELECT * FROM users WHERE phone = ?';
         db.query(query, [phone], (err, results) => {
             if (err) {
                 console.error('❌ Database Query Error:', err);
