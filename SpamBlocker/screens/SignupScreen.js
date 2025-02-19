@@ -22,6 +22,7 @@ const SignupScreen = ({ navigation }) => {
         }
 
         try {
+            console.log('📤 Sending Request to Backend:', { username, phone });
             const response = await axios.post('http://192.168.1.108:3000/api/users/register', {
                 username,
                 phone

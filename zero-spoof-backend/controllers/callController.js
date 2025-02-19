@@ -1,10 +1,15 @@
 const ami = require('../config/asterisk'); // ✅ Ensure correct path
 const speakeasy = require('speakeasy');
 const { getUserByPhone } = require('../models/userModel');
+const { logCall } = require('../models/callModel'); // ✅ New function to log calls
 const cors = require('cors');
 
 exports.initiateCall = (req, res) => {
     const { phone } = req.body;
+
+    if (!phone || !/^[789]\d{9}$/.test(phone)) {  
+        return res.status(400).json({ error: 'Invalid Indian phone number format' });
+    }
 
     getUserByPhone(phone, (err, result) => {
         if (err || result.length === 0) {
@@ -23,31 +28,39 @@ exports.initiateCall = (req, res) => {
             console.error('❌ AMI is not initialized properly.');
             return res.status(500).json({ error: 'Asterisk Manager Interface (AMI) not available' });
         }
+
+        const sipProvider = 'sip.provider'; // ✅ Ensure this matches Asterisk SIP trunk name
         
-        // Replace 'my_sip_provider' with the actual SIP provider name from `sip show peers`
-        const sipProvider = 'my_sip_provider';  // ✅ Ensure this matches Asterisk SIP trunk name
-        
-        ami.action({
-            Action: 'Originate',
-            Channel: `SIP/${sipProvider}/${phone}`,  // ✅ Correct SIP channel
-            Context: 'default',
-            Exten: phone,
-            Priority: 1,
-            CallerID: 'ZeroSpoof',
-            Application: 'Playback',
-            Data: `dtmf/${token}`
-        }, (err, response) => {
-            if (err) {
-                console.error('❌ AMI Call Error:', err);
-                return res.status(500).json({ error: 'Call initiation failed', details: err });
+        const originateCall = (attempt = 1) => {
+            if (attempt > 3) {
+                console.error('❌ Maximum retry attempts reached.');
+                return res.status(500).json({ error: 'Call failed after multiple attempts' });
             }
-            console.log('✅ Call Initiated Successfully:', response);
-            res.json({ message: 'Call initiated', TOTP: token });
-        });
-        
+
+            ami.action({
+                Action: 'Originate',
+                Channel: `SIP/${sipProvider}/${phone}`,
+                Context: 'default',
+                Exten: phone,
+                Priority: 1,
+                CallerID: 'ZeroSpoof',
+                Application: 'Playback',
+                Data: `dtmf/${token}`
+            }, async (err, response) => {
+                if (err) {
+                    console.error(`❌ Call Attempt ${attempt} Failed:`, err);
+                    return setTimeout(() => originateCall(attempt + 1), 5000); // Retry after 5 sec
+                }
+
+                console.log('✅ Call Initiated Successfully:', response);
+                
+                // ✅ Store call details in the database
+                await logCall(phone, token, 'initiated');
+
+                res.json({ message: 'Call initiated', TOTP: token });
+            });
+        };
+
+        originateCall(); // ✅ Start call initiation process
     });
 };
-
-
-// http://localhost:3000/api/calls/call
-// http://localhost:3000/api/users/register 

@@ -17,6 +17,7 @@ app.use(express.json());
 // ✅ Routes
 app.use('/api/users', userRoutes);
 app.use('/api/calls', callRoutes);
+app.use(cors());
 
 // ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
