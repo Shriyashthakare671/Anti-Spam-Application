@@ -2,6 +2,19 @@ const db = require('../config/db');
 const validStatuses = ['white', 'black', 'gray'];
 
 const callModel = {
+        getAllCalls() {
+            return new Promise((resolve, reject) => {
+                const query = 'SELECT * FROM call_logs ORDER BY timestamp DESC';
+                db.query(query, (err, results) => {
+                    if (err) {
+                        console.error('❌ Database Error:', err);
+                        return reject(err);
+                    }
+                    resolve(results);
+                });
+            });
+        },
+
     // ✅ Check Spoofing Status (Database First, Then Apply Spam Detection)
     checkSpoofing(phone) {
         return new Promise((resolve, reject) => {

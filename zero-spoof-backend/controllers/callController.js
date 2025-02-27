@@ -3,6 +3,17 @@ const speakeasy = require('speakeasy');
 const { getUserByPhone } = require('../models/userModel');
 const callModel = require('../models/callModel'); // ✅ Import call model
 
+
+exports.getAllCalls = async (req, res) => {
+    try {
+        const calls = await callModel.getAllCalls();
+        res.json(calls);
+    } catch (error) {
+        console.error('❌ Error fetching call logs:', error);
+        res.status(500).json({ error: 'Failed to fetch call logs' });
+    }
+};
+
 // ✅ Check Spoofing Status
 exports.checkSpoofing = async (req, res) => {
     try {
