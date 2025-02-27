@@ -86,7 +86,7 @@ function AuthStack({ setIsLoggedIn }) {
 
 // 🚀 Main App Component
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // ✅ Default is logged out
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // ✅ Default is logged out
 
   // ✅ Handle Logout
   const handleLogout = () => {

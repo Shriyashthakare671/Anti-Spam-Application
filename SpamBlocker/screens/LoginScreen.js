@@ -1,18 +1,17 @@
+import axios from 'axios';
 import React, { useState } from 'react';
 import {
-    View,
-    TextInput,
-    TouchableOpacity,
-    Text,
-    Image,
-    StyleSheet,
     Alert,
+    Image,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity
 } from 'react-native';
-import axios from 'axios';
-import { responsiveWidth, responsiveHeight, responsiveFontSize } from '../utils/responsive';
+import { responsiveFontSize, responsiveHeight, responsiveWidth } from '../utils/responsive';
 
 const BASE_URL = 'http://192.168.1.108:3000'; // ✅ Replace with your actual backend URL
 

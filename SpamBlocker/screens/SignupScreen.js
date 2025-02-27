@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
-import PushNotification from 'react-native-push-notification'; 
-import { View, TextInput,button, Alert, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import axios from 'axios';
+import React, { useState } from 'react';
+import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import { responsiveHeight, responsiveWidth, responsiveFontSize } from '../utils/responsive';
-import LoginScreen from './LoginScreen';
-import { NavigationContainer } from '@react-navigation/native';
+import { responsiveFontSize, responsiveHeight, responsiveWidth } from '../utils/responsive';
 
 const SignupScreen = ({ navigation }) => {
     const [username, setUsername] = useState('');

@@ -1,7 +1,8 @@
 const express = require('express');
-const { initiateCall } = require('../controllers/callController'); // ✅ Ensure correct path
+const callController = require('../controllers/callController');
 const router = express.Router();
 
-router.post('/initiate', initiateCall); // ✅ Correct API path
+router.post('/check', callController.checkSpoofing);
+router.post('/log', callController.logCall);
 
 module.exports = router;
