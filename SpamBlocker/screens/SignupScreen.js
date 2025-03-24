@@ -31,9 +31,20 @@ const SignupScreen = ({ navigation }) => {
                 // Alert.alert('Success', `Registration Successful!\nYour TOTP Token: ${response.data.totpToken}`);
 
 
-                setQrData(response.data.qrCode?.substring(0, 500));
+                // ✅ Store Seed Record in QR Code
+                const seedRecord = JSON.stringify({
+                    username,
+                    phone,
+                    secret: response.data.secret,
+                    totpToken: response.data.totpToken
+                });
+
+                setQrData(seedRecord);  // Store Seed in QR Code
                 setTotpToken(response.data.totpToken);
                 setIsRegistered(true);
+
+                 // ✅ Store Seed Record in Local Storage
+                await AsyncStorage.setItem('seedRecord', seedRecord);
 
                 Alert.alert(
                     'Success',
@@ -92,7 +103,7 @@ const SignupScreen = ({ navigation }) => {
                 </>
             ) : (
                 <View style={styles.qrContainer}>
-                    <Text style={styles.text}>Your TOTP Token (Auto-Fetched via QR Code):</Text>
+                    <Text style={styles.text}>Your Seed Record in QR Code:</Text>
                     <View style={styles.qrWrapper}>
                         <QRCode value={qrData} size={200} />
                     </View>

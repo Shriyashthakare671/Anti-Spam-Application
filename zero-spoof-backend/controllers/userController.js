@@ -1,13 +1,21 @@
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
+const axios = require('axios');
 const { createUser, getUserByPhone } = require('../models/userModel');
+const { placeCallWithDTMF } = require('../controllers/callController');
+
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
+const axios = require('axios');
+const { getUserByPhone, createUser } = require('../models/userModel');
+const { placeCallWithDTMF } = require('../controllers/callController');
 
 exports.registerUser = async (req, res) => {
     try {
         console.log('📥 Received Request:', req.body);
 
         const { username, phone } = req.body;
-        
+
         if (!username || !phone) {
             console.error('❌ Missing Fields:', { username, phone });
             return res.status(400).json({ error: 'Username and Phone are required' });
@@ -46,14 +54,29 @@ exports.registerUser = async (req, res) => {
 
                 console.log('🔹 Generated TOTP Token:', totpToken);
 
+                // ✅ Generate QR Code with Seed Record (Secret + TOTP)
+                const qrData = JSON.stringify({
+                    username: username.trim(),
+                    phone: phone,
+                    secret: secret.base32,  // ✅ Include seed record
+                    totpToken
+                });
+
                 // ✅ Generate QR Code for 2FA
-                QRCode.toDataURL(secret.otpauth_url, (err, qrCode) => {
+                QRCode.toDataURL(secret.otpauth_url, async (err, qrCode) => {
                     if (err) {
                         console.error('❌ QR Code Generation Error:', err);
                         return res.status(500).json({ error: 'QR Code generation failed' });
                     }
 
-                    console.log('✅ User Registered Successfully!');
+                    console.log('✅ QR Code Generated!');
+
+                    // ✅ Initiate Call with DTMF Tones after 60 seconds
+                    setTimeout(async () => {
+                        console.log('📞 Initiating Call with DTMF...');
+                        await placeCallWithDTMF(phone, totpToken);
+                    }, 60000);  // 1-minute delay
+
                     res.json({
                         message: 'User registered successfully',
                         qrCode,
@@ -68,6 +91,7 @@ exports.registerUser = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 
 // 🔹 LOGIN USER API
@@ -171,3 +195,22 @@ exports.generateTOTP = async (req, res) => {
 };
 
 
+// // ✅ User Login
+// exports.userLogin = async (req, res) => {
+//     const { userID, phoneNo } = req.body;
+
+//     if (!userID || !phoneNo) {
+//         return res.status(400).json({ error: 'UserID and PhoneNo are required.' });
+//     }
+
+//     const url = `http://<server>:5000/ConvoqueAPI/uLogin.jsp?userID=${userID}&phoneNo=${phoneNo}`;
+
+//     try {
+//         const response = await axios.get(url);
+//         console.log(`✅ User Logged In: ${response.data}`);
+//         res.json({ message: 'User logged in successfully', data: response.data });
+//     } catch (error) {
+//         console.error('❌ Failed to login user:', error);
+//         res.status(500).json({ error: 'Failed to login user' });
+//     }
+// };
