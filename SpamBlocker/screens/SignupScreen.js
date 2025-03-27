@@ -1,37 +1,42 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCode from 'react-native-qrcode-svg';
 import { responsiveFontSize, responsiveHeight, responsiveWidth } from '../utils/responsive';
 
 const SignupScreen = ({ navigation }) => {
     const [username, setUsername] = useState('');
-    const [phone, setphone] = useState('');
+    const [phone, setPhone] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [qrData, setQrData] = useState('');
     const [totpToken, setTotpToken] = useState('');
     const [isRegistered, setIsRegistered] = useState(false);
 
-
     const handleSignup = async () => {
-        if (!username || !phone) {
-            Alert.alert('Error', 'Username and Phone Number are required');
+        if (!username || !phone || !password || !confirmPassword) {
+            Alert.alert('Error', 'All fields are required');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            Alert.alert('Error', 'Passwords do not match');
             return;
         }
 
         try {
-            console.log('📤 Sending Request to Backend:', { username, phone });
+            console.log('📤 Sending Request to Backend:', { username, phone, password });
+
             const response = await axios.post('http://192.168.1.108:3000/api/users/register', {
                 username,
-                phone
+                phone,
+                password
             });
 
             console.log('API Response:', response.data);
 
             if (response.data.secret && response.data.totpToken) {
-                // Alert.alert('Success', `Registration Successful!\nYour TOTP Token: ${response.data.totpToken}`);
-
-
-                // ✅ Store Seed Record in QR Code
                 const seedRecord = JSON.stringify({
                     username,
                     phone,
@@ -39,11 +44,11 @@ const SignupScreen = ({ navigation }) => {
                     totpToken: response.data.totpToken
                 });
 
-                setQrData(seedRecord);  // Store Seed in QR Code
+                setQrData(seedRecord);
                 setTotpToken(response.data.totpToken);
                 setIsRegistered(true);
 
-                 // ✅ Store Seed Record in Local Storage
+                // ✅ Store Seed Record in Local Storage
                 await AsyncStorage.setItem('seedRecord', seedRecord);
 
                 Alert.alert(
@@ -51,22 +56,9 @@ const SignupScreen = ({ navigation }) => {
                     'Signup Successful!\nYour TOTP Token Auto Fetch BY QR Code.',
                 );
 
-                // Alert.alert('Success', `Signup Successful! Your TOTP Token: ${response.data.totpToken}`);
-
-                // // ✅ Send Push Notification with TOTP Token
-                // PushNotification.localNotification({
-                //     channelId: 'totp-channel',
-                //     title: 'Your TOTP Code',
-                //     message: TOTP: ${response.data.totpToken},  // ✅ Corrected message to show actual TOTP token
-                //     playSound: true,
-                //     soundName: 'default',
-                //     timeoutAfter: 60000, // Notification disappears after 1 min
-                // });
-
-
                 setTimeout(() => {
-                    navigation.navigate('Login'); 
-                }, 5000); 
+                    navigation.navigate('Login');
+                }, 5000);
             } else {
                 Alert.alert('Error', response.data.message || 'Registration Failed');
             }
@@ -83,20 +75,38 @@ const SignupScreen = ({ navigation }) => {
                     <View style={{ alignItems: 'center' }}>
                         <Image source={require('../assets/logo.png')} style={styles.logo} />
                     </View>
+                    
                     <TextInput
                         style={styles.input}
                         placeholder="Username"
                         value={username}
                         onChangeText={setUsername}
                     />
+                    
                     <TextInput
                         style={styles.input}
                         placeholder="Phone Number"
                         value={phone}
-                        onChangeText={setphone}
+                        onChangeText={setPhone}
                         keyboardType="phone-pad"
                     />
-                    {/* <Button title="Signup" onPress={handleSignup} /> */}
+                    
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Password"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                    />
+                    
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Confirm Password"
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                        secureTextEntry
+                    />
+                    
                     <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
                         <Text style={styles.buttonText}>Signup</Text>
                     </TouchableOpacity>
@@ -107,7 +117,6 @@ const SignupScreen = ({ navigation }) => {
                     <View style={styles.qrWrapper}>
                         <QRCode value={qrData} size={200} />
                     </View>
-                    {/* <Text style={styles.totpText}>TOTP Token: {totpToken}</Text> */}
                     <TouchableOpacity style={styles.button} onPress={() => navigation.replace('LoginScreen')}>
                         <Text style={styles.buttonText}>Proceed to Login</Text>
                     </TouchableOpacity>
